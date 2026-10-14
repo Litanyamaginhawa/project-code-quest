@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CodeQuest — Learn to Code, Lesson by Lesson</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b31; --panel-2:#1b2440; --line:#26314f;
+    --txt:#e8ecf8; --mut:#93a0c4; --acc:#5b8cff; --acc-2:#7c5bff;
+    --ok:#25c281; --bad:#ff5c6c; --warn:#ffb545; --r:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:radial-gradient(1200px 700px at 15% -10%,#1c2a55 0%,transparent 60%),
+               radial-gradient(900px 600px at 110% 10%,#2a1c55 0%,transparent 55%),var(--bg);
+    color:var(--txt);font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100dvh;padding-bottom:env(safe-area-inset-bottom);
+  }
+  a{color:var(--acc);text-decoration:none}
+  .wrap{max-width:920px;margin:0 auto;padding:18px 16px 96px}
+
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:19px;letter-spacing:-.3px}
+  .logo .mark{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;
+    background:linear-gradient(135deg,var(--acc),var(--acc-2));font-size:15px}
+  .spacer{flex:1}
+  .chip{font-size:12px;color:var(--mut);background:var(--panel);border:1px solid var(--line);
+    padding:6px 11px;border-radius:999px;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:16px}
+  h1{font-size:22px;margin:0 0 6px;letter-spacing:-.4px}
+  h2{font-size:17px;margin:0 0 6px;letter-spacing:-.2px}
+  h3{font-size:15px;margin:16px 0 6px}
+  .sub{color:var(--mut);font-size:13.5px;margin:0 0 14px}
+  .muted{color:var(--mut);font-size:13px}
+  button{font:inherit;cursor:pointer;border:0}
+  .btn{background:linear-gradient(135deg,var(--acc),var(--acc-2));color:#fff;font-weight:650;
+    padding:12px 18px;border-radius:11px;min-height:46px;transition:.15s}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:var(--panel-2);border:1px solid var(--line);color:var(--txt)}
+  .btn.sm{padding:8px 13px;min-height:38px;font-size:13px;border-radius:9px}
+  .btn.wide{width:100%}
+  .btn[disabled]{opacity:.45;cursor:not-allowed}
+  input,select,textarea{font:inherit;width:100%;background:var(--panel-2);color:var(--txt);
+    border:1px solid var(--line);border-radius:11px;padding:12px;min-height:46px}
+  textarea{min-height:140px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+  label{display:block;font-size:12.5px;color:var(--mut);margin:12px 0 6px;font-weight:600}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row>*{flex:1;min-width:150px}
+  .hide{display:none!important}
+  code,pre{font-family:ui-monospace,Menlo,Consolas,monospace}
+  pre{background:#0a0f1e;border:1px solid var(--line);border-radius:10px;padding:13px;
+    overflow-x:auto;font-size:12.5px;margin:10px 0;line-height:1.6}
+  .msg{font-size:13px;border-radius:10px;padding:10px 12px;margin-top:12px;display:none}
+  .msg.on{display:block}
+  .msg.err{background:#3a1620;border:1px solid #6b2231;color:#ffb3bc}
+  .msg.ok{background:#0f2e24;border:1px solid #1d6a4e;color:#8ff0c8}
+
+  /* auth */
+  #auth{max-width:420px;margin:6vh auto 0}
+  .tabs{display:flex;gap:6px;background:var(--panel-2);padding:5px;border-radius:12px;margin-bottom:18px}
+  .tabs button{flex:1;background:transparent;color:var(--mut);padding:10px;border-radius:9px;font-weight:650}
+  .tabs button.on{background:var(--acc);color:#fff}
+
+  /* dashboard */
+  .langrow{display:flex;align-items:center;gap:14px;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:12px;padding:14px;margin-bottom:10px;text-align:left;color:var(--txt);width:100%}
+  .langrow:hover{border-color:var(--acc)}
+  .ring{flex:0 0 52px;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;
+    font-size:12px;font-weight:800;
+    background:conic-gradient(var(--ok) calc(var(--p)*1%), var(--panel) 0)}
+  .ring>span{width:40px;height:40px;border-radius:50%;background:var(--panel-2);display:grid;place-items:center}
+  .langrow b{display:block;font-size:15px}
+  .langrow small{color:var(--mut);font-size:12.5px}
+
+  /* lesson list */
+  .lesson{display:flex;gap:12px;align-items:flex-start;background:var(--panel-2);border:1px solid var(--line);
+    border-radius:12px;padding:13px;margin-bottom:9px;width:100%;text-align:left;color:var(--txt)}
+  .lesson:not([disabled]):hover{border-color:var(--acc)}
+  .lesson[disabled]{opacity:.5;cursor:not-allowed}
+  .num{flex:0 0 30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;
+    font-weight:700;background:var(--panel);border:1px solid var(--line)}
+  .num.done{background:var(--ok);border-color:var(--ok);color:#04231a}
+  .lesson b{display:block;font-size:14.5px;margin-bottom:2px}
+  .lesson small{color:var(--mut);font-size:12.5px;display:block}
+
+  /* quiz */
+  .q{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:11px}
+  .q .qt{font-weight:650;margin-bottom:10px;font-size:14.5px}
+  .opt{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);
+    color:var(--txt);padding:11px 13px;border-radius:10px;margin-bottom:7px;font-size:13.5px}
+  .opt:not([disabled]):hover{border-color:var(--acc)}
+  .opt.correct{background:#10331f;border-color:var(--ok)}
+  .opt.wrong{background:#341018;border-color:var(--bad)}
+  .opt[disabled]{cursor:default}
+  .exp{font-size:12.5px;color:var(--mut);border-left:2px solid var(--acc);padding-left:11px;
+    margin-top:9px;display:none;line-height:1.65}
+  .exp.on{display:block}
+  .bar{height:8px;background:var(--panel-2);border-radius:99px;overflow:hidden;margin:6px 0 12px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc-2));width:0;transition:.3s}
+  .scoreline{font-size:34px;font-weight:800;letter-spacing:-1.4px}
+  .badge{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;margin-left:8px}
+  .badge.pass{background:#10331f;color:#8ff0c8;border:1px solid #1d6a4e}
+  .badge.fail{background:#3a1620;color:#ffb3bc;border:1px solid #6b2231}
+
+  /* bottom nav */
+  nav.tabbar{position:fixed;left:0;right:0;bottom:0;background:rgba(15,21,40,.96);
+    backdrop-filter:blur(12px);border-top:1px solid var(--line);display:none;
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:50}
+  nav.tabbar button{flex:1;background:transparent;color:var(--mut);font-size:11px;
+    padding:8px 2px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:600}
+  nav.tabbar button.on{color:var(--acc)}
+  nav.tabbar .ico{font-size:17px;line-height:1}
+  .desk-tabs{display:none;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .desk-tabs button{background:var(--panel);border:1px solid var(--line);color:var(--mut);
+    padding:10px 16px;border-radius:11px;font-weight:650}
+  .desk-tabs button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+
+  @media(max-width:720px){
+    nav.tabbar{display:flex}
+    .wrap{padding-bottom:112px}
+  }
+  @media(min-width:721px){
+    .desk-tabs{display:flex}
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= AUTH ================= -->
+<section id="auth">
+  <div class="wrap">
+    <div class="logo" style="justify-content:center;margin-bottom:22px">
+      <span class="mark">&lt;/&gt;</span> CodeQuest
+    </div>
+
+    <div class="card">
+      <div class="tabs">
+        <button id="tabLogin" class="on">Log in</button>
+        <button id="tabSignup">Sign up</button>
+      </div>
+      <div id="authMsg" class="msg"></div>
+
+      <label>Email</label>
+      <input id="email" type="email" placeholder="you@email.com" autocomplete="email">
+
+      <label>Password</label>
+      <input id="password" type="password" placeholder="6+ characters" autocomplete="current-password">
+
+      <div id="signupExtra" class="hide">
+        <label>Username</label>
+        <input id="username" type="text" placeholder="codemaster99" autocomplete="nickname">
+      </div>
+
+      <div style="height:18px"></div>
+      <button id="authBtn" class="btn wide">Log in</button>
+      <p class="muted" style="margin-top:14px;text-align:center">
+        Free. Your progress and scores are saved to your account.
+      </p>
+    </div>
+
+    <div id="demoNote" class="card" style="display:none">
+      <h2>Demo mode — no Supabase keys</h2>
+      <p class="sub">Everything works and lessons grade normally, but accounts and progress are stored in
+      <b>localStorage on this device only</b>. Add your Supabase URL and anon key in the config block to
+      turn on real cloud accounts.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<section id="app" class="hide">
+  <div class="wrap">
+    <header>
+      <div class="logo"><span class="mark">&lt;/&gt;</span> CodeQuest</div>
+      <div class="spacer"></div>
+      <span class="chip" id="whoami">—</span>
+      <button id="logoutBtn" class="btn ghost sm">Log out</button>
+    </header>
+
+    <div class="desk-tabs">
+      <button data-view="learn" class="on">📚 Lessons</button>
+      <button data-view="custom">🧪 Build Your Own Test</button>
+      <button data-view="saved">💾 My Saved Work</button>
+    </div>
+
+    <!-- ---------- learn ---------- -->
+    <div id="view-learn">
+      <div id="curriculum"></div>
+    </div>
+
+    <!-- ---------- custom test ---------- -->
+    <div id="view-custom" class="hide">
+      <div class="card">
+        <h2>🧪 Build your own test</h2>
+        <p class="sub">Type or paste the code you're working on. CodeQuest reads it, spots the concepts
+        you're actually using, and writes a practice test from them. Same grading, same saving.</p>
+        <div id="customLockNote" class="msg err" style="margin-bottom:14px"></div>
+
+        <label>Language</label>
+        <select id="genLang"></select>
+
+        <label>Lesson / topic</label>
+        <select id="genLesson"></select>
+
+        <label>Your code</label>
+        <textarea id="codeInput" placeholder="const nums = [1,2,3,4,5];
+
+for (let i = 0; i < nums.length; i++) {
+  if (nums[i] % 2 === 0) console.log(nums[i]);
+}
+
+function sum(arr) {
+  return arr.reduce((a, b) => a + b, 0);
+}"></textarea>
+
+        <p class="muted" id="detectLine">Detected: —</p>
+
+        <div class="row" style="margin-top:12px">
+          <button id="genFromCode" class="btn">Build test from my code</button>
+          <button id="genFromLesson" class="btn ghost">Build test from this lesson</button>
+        </div>
+      </div>
+      <div id="quizArea"></div>
+    </div>
+
+    <!-- ---------- saved ---------- -->
+    <div id="view-saved" class="hide">
+      <div class="card">
+        <h2>💾 My saved work</h2>
+        <p class="sub">Custom tests you built and saved. Open one to retake it, or delete it.</p>
+        <div id="savedList"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <button data-view="learn" class="on"><span class="ico">📚</span>Lessons</button>
+    <button data-view="custom"><span class="ico">🧪</span>Build Test</button>
+    <button data-view="saved"><span class="ico">💾</span>Saved</button>
+  </nav>
+</section>
+
+<script>
+/* ================================================================
+   1) CONFIG
+   ================================================================ */
+const SUPABASE_URL  = "https://kajpthzcrluqxfnbhbtz.supabase.co";
+const SUPABASE_ANON = "sb_publishable_2MEId4qHkRslSxlFhsOnGg_oKnFLgn9";
+
+const configured = SUPABASE_URL.startsWith("https://") && SUPABASE_ANON.startsWith("sb_publishable_");
+let sb = null;
+if (configured && window.supabase) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+}
+if (!configured) document.getElementById('demoNote').style.display = 'block';
+
+/* ================================================================
+   2) CURRICULUM — ordered lessons, each with its own test
+   ================================================================ */
+const PASS_MARK = 0.7;   // 70% to clear a lesson and unlock the next
+
+const CURRICULUM = [
+  {
+    id:"htmlcss", name:"HTML & CSS", tag:"Structure and layout of every website",
+    open:{ label:"MDN — Learn Web Development", url:"[developer.mozilla.org](https://developer.mozilla.org/en-US/docs/Learn_web_development)" },
+    lessons:[
+      { id:"htmlcss-1", title:"HTML document structure and semantic tags",
+        goal:"Write a valid HTML page and know why semantic tags matter.",
+        body:"Every page starts with a doctype, a html element, and a head/body split. The head carries metadata (charset, viewport, title); the body carries content. Semantic tags such as article, section, nav, and header describe what content IS, not how it looks — screen readers, search engines and your future self all depend on that distinction.",
+        code:"<!DOCTYPE html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n    <title>My page</title>\n  </head>\n  <body>\n    <header><h1>Site title</h1></header>\n    <main>\n      <article>\n        <h2>Post title</h2>\n        <p>Content a screen reader can announce.</p>\n      </article>\n    </main>\n  </body>\n</html>",
+        quiz:[
+          { q:"Which tag is the semantic choice for a self-contained piece of content?",
+            o:["<article>","<div>","<span>","<b>"], a:0,
+            e:"article carries meaning; div and span are generic containers with no semantics." },
+          { q:"Why does the img tag need an alt attribute?",
+            o:["It describes the image for screen readers and when loading fails","It speeds up rendering","It is only for SEO","It is optional"], a:0,
+            e:"alt is an accessibility requirement — it is the text version of the image." },
+          { q:"What belongs in the head rather than the body?",
+            o:["Metadata such as charset, viewport and title","Visible headings","Paragraphs","Buttons"], a:0,
+            e:"The head describes the document; the body is what users see." }
+        ]},
+      { id:"htmlcss-2", title:"CSS selectors and the box model",
+        goal:"Target elements precisely and stop guessing at spacing problems.",
+        body:"A CSS rule has a selector and declarations. Specificity decides which rule wins when two match: inline style beats id beats class beats element. Every element is a box made of content, padding, border and margin. Setting box-sizing: border-box makes width include padding and border, which is why almost every project turns it on first.",
+        code:"*, *::before, *::after { box-sizing: border-box; }\n\n.card {\n  padding: 16px;\n  border: 1px solid #ccc;\n  border-radius: 12px;\n  margin-bottom: 12px;\n}\n\n#hero .card { border-color: #5b8cff; }  /* id + class beats class alone */",
+        quiz:[
+          { q:"Which selector has the highest specificity?",
+            o:["#id","class",".class","div"], a:0,
+            e:"ID beats class beats element. Inline styles outrank an ID." },
+          { q:"What does box-sizing: border-box change?",
+            o:["Padding and border are included in the declared width","The border is removed","Margin is included","Text alignment"], a:0,
+            e:"It makes widths predictable, which is why it is set globally in most projects." },
+          { q:"Which property creates space INSIDE the border?",
+            o:["padding","margin","gap","outline"], a:0,
+            e:"padding is inside the border; margin is outside it." }
+        ]},
+      { id:"htmlcss-3", title:"Flexbox and Grid layouts",
+        goal:"Choose the right layout tool and build a responsive card grid.",
+        body:"Flexbox lays out items along one axis — a row of buttons, a navigation bar. Grid lays out along two axes — a full page or a card grid. The most useful Grid trick is repeat(auto-fill, minmax(240px, 1fr)): it fits as many columns as the screen allows, with no media queries at all.",
+        code:".row  { display: flex; gap: 12px; align-items: center; }\n\n.grid {\n  display: grid;\n  gap: 12px;\n  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));\n}",
+        quiz:[
+          { q:"How many axes does Flexbox control?",
+            o:["One (the main axis)","Two","Three","None"], a:0,
+            e:"Flexbox is one-dimensional; Grid is two-dimensional." },
+          { q:"What does repeat(auto-fill, minmax(240px, 1fr)) do?",
+            o:["Fits as many 240px-minimum columns as will fit, with no media query","Fixes the layout at 240px","Creates a single column","Sets a maximum height"], a:0,
+            e:"This one line replaces most of the grid-related media queries you would otherwise write." }
+        ]},
+      { id:"htmlcss-4", title:"Responsive design and mobile-first CSS",
+        goal:"Build once and have it work from a 360px phone to a desktop.",
+        body:"Mobile-first means your base CSS targets small screens and media queries ADD complexity as the viewport grows. Use min-width queries for that. Prefer relative units — rem for text, % and fr for layout — so user font-size preferences are respected.",
+        code:".grid { grid-template-columns: 1fr; }\n\n@media (min-width: 720px) {\n  .grid { grid-template-columns: repeat(3, 1fr); }\n}\n\nh1 { font-size: 1.5rem; }   /* scales with the user's root size */",
+        quiz:[
+          { q:"In a mobile-first stylesheet, which media query direction do you write?",
+            o:["min-width, adding complexity as screens grow","max-width only","print only","none"], a:0,
+            e:"Base styles serve the phone; min-width queries progressively enhance upward." },
+          { q:"Which unit is relative to the root font size?",
+            o:["rem","px","cm","pt"], a:0,
+            e:"rem tracks the html font size, so it respects the user's accessibility settings. em is relative to the parent." }
+        ]}
+    ]
+  },
+
+  {
+    id:"javascript", name:"JavaScript", tag:"The language of the web, front to back",
+    open:{ label:"MDN — JavaScript Guide", url:"[developer.mozilla.org](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide)" },
+    lessons:[
+      { id:"js-1", title:"Variables, types and scope",
+        goal:"Choose const, let or var deliberately and predict what typeof returns.",
+        body:"const and let are block-scoped; var is function-scoped. Use const by default — it prevents reassignment of the binding, though the contents of an object or array can still change. Watch out for typeof null, which returns 'object' for historical reasons, so always compare against null directly.",
+        code:"const name = 'Ana';\nlet score = 0;\nscore += 10;\n\nconsole.log(typeof score);        // 'number'\nconsole.log(typeof null);         // 'object'  (historical bug)\nconsole.log(null === null);       // true — this is the reliable check",
+        quiz:[
+          { q:"Which declaration cannot be reassigned?",
+            o:["const","let","var","none of them"], a:0,
+            e:"const locks the binding. You can still mutate an object it points to." },
+          { q:"What does typeof null return?",
+            o:["'object'","'null'","'undefined'","it throws"], a:0,
+            e:"A long-standing bug kept for backwards compatibility. Use === null instead." },
+          { q:"Where is a var declared inside a function visible?",
+            o:["Anywhere in that function","Only in its block","Globally always","It is not visible"], a:0,
+            e:"var is function-scoped while let and const are block-scoped." }
+        ]},
+      { id:"js-2", title:"Functions, arrows and closures",
+        goal:"Write functions in the right form and understand what a closure keeps alive.",
+        body:"Functions declared with function are hoisted; arrow functions are not, and they do not bind their own this. A closure is a function remembering the scope it was created in, even after that outer function has returned — the basis of counters, callbacks and module patterns.",
+        code:"function add(a, b = 0) { return a + b; }\nconst mul = (a, b) => a * b;\nconst sum = (...nums) => nums.reduce((x, y) => x + y, 0);\n\nfunction counter() {\n  let count = 0;\n  return () => ++count;   // closure keeps count alive\n}\nconst next = counter();\nconsole.log(next(), next());  // 1 2",
+        quiz:[
+          { q:"What is a closure?",
+            o:["A function retaining access to its outer scope after that scope returned","A copy of all outer variables","A global variable","A loop construct"], a:0,
+            e:"That retained scope is how counters, callbacks and module state work." },
+          { q:"What does (...nums) mean in a parameter list?",
+            o:["Rest parameter — collects arguments into an array","Spread operator merging arrays","A required argument","An error"], a:0,
+            e:"In a parameter list it is rest; in a call or array literal the same syntax spreads." },
+          { q:"What does (a, b = 0) => a + b return when called with one argument?",
+            o:["The argument plus 0","NaN","An error","undefined"], a:0,
+            e:"Default parameters apply when the argument is undefined." }
+        ]},
+      { id:"js-3", title:"Arrays, objects and the big three methods",
+        goal:"Transform data with map, filter and reduce instead of manual loops.",
+        body:"map returns a new array of the same length, filter returns a subset, reduce folds everything into one value. These three cover the vast majority of real data work. Destructuring pulls values out of objects and arrays cleanly.",
+        code:"const users = [{ n:'Al', age:22 }, { n:'Bea', age:31 }];\n\nconst names  = users.map(u => u.n);            // ['Al','Bea']  same length\nconst adults = users.filter(u => u.age >= 25); // [{ n:'Bea', age:31 }]\nconst total  = [1,2,3].reduce((a, b) => a + b, 0); // 6\n\nconst { n, age } = users[1];   // destructuring",
+        quiz:[
+          { q:"Which method always returns an array of the SAME length?",
+            o:["map()","filter()","reduce()","forEach()"], a:0,
+            e:"map is a 1:1 transform. filter can return fewer, reduce returns a single value." },
+          { q:"What does [1,2,3].reduce((a, b) => a + b, 0) evaluate to?",
+            o:["6","123","[1,2,3]","NaN"], a:0,
+            e:"The second argument 0 is the initial accumulator, so 0+1+2+3 = 6." },
+          { q:"Which syntax destructures an object?",
+            o:["const { name } = user","const [ name ] = user","const name = user['name']","user.name"], a:0,
+            e:"Curly braces for objects, square brackets for arrays." }
+        ]},
+      { id:"js-4", title:"Control flow and loops",
+        goal:"Pick the right loop and stop using for...in on arrays.",
+        body:"Use for...of to iterate values, for...in only for object keys. The ternary operator returns a value, so it belongs in expressions. break exits a loop, continue skips to the next iteration.",
+        code:"for (const u of users) {\n  console.log(u.n);\n}\n\nlet i = 0;\nwhile (i < 3) { i++; }\n\nconst label = score > 50 ? 'pass' : 'retry';   // ternary returns a value",
+        quiz:[
+          { q:"Which loop iterates the VALUES of an array?",
+            o:["for...of","for...in","while(true)","switch"], a:0,
+            e:"for...in gives keys or indexes and is not recommended for arrays." },
+          { q:"What is condition ? a : b?",
+            o:["The ternary operator, an expression returning one of two values","Nullish coalescing","Optional chaining","The spread operator"], a:0,
+            e:"It is the shorthand if/else that produces a value." },
+          { q:"What does continue do inside a loop?",
+            o:["Skips to the next iteration","Exits the loop","Exits the function","Restarts the loop"], a:0,
+            e:"break exits the loop entirely; continue skips just this iteration." }
+        ]},
+      { id:"js-5", title:"Promises and async/await",
+        goal:"Fetch data and handle failures without blocking the page.",
+        body:"An async function always returns a Promise. await pauses inside it until the promise settles. Wrap awaited calls in try/catch to handle rejection, and remember that Promise.all rejects as soon as any one promise fails.",
+        code:"async function loadUsers() {\n  try {\n    const res = await fetch('/api/users');\n    if (!res.ok) throw new Error('HTTP ' + res.status);\n    return await res.json();\n  } catch (err) {\n    console.error('Failed:', err.message);\n  }\n}\n\nconst [a, b] = await Promise.all([loadUsers(), loadUsers()]);",
+        quiz:[
+          { q:"What does an async function always return?",
+            o:["A Promise","The value directly","A callback","undefined"], a:0,
+            e:"Even a plain return value is wrapped in a resolved Promise." },
+          { q:"How do you catch an error from an awaited call?",
+            o:["try/catch around the await","An if (err) check",".onError()","You cannot"], a:0,
+            e:"try/catch is the standard pattern; .catch() works when you are not awaiting." },
+          { q:"What happens to Promise.all when one promise rejects?",
+            o:["The whole thing rejects immediately","It still resolves","The error is ignored","It retries automatically"], a:0,
+            e:"Promise.all is fail-fast. Use Promise.allSettled if you need every result." }
+        ]},
+      { id:"js-6", title:"The DOM and event handling",
+        goal:"Respond to user actions and update the page without reloading it.",
+        body:"querySelector finds elements, addEventListener attaches behaviour, classList toggles styling. Forms submit and reload the page by default — preventDefault stops that so you can handle the data in JavaScript.",
+        code:"const btn = document.querySelector('#go');\nbtn.addEventListener('click', e => {\n  e.preventDefault();\n  document.body.classList.toggle('dark');\n});\n\nconst input = document.querySelector('#name');\ninput.addEventListener('input', () => console.log(input.value));",
+        quiz:[
+          { q:"Why call e.preventDefault() in a form submit handler?",
+            o:["To stop the page reloading","To disable JavaScript","To clear the form","To call the API"], a:0,
+            e:"Without it the browser navigates away and your handler's work is lost." },
+          { q:"Which is the correct way to attach a click handler?",
+            o:["el.addEventListener('click', fn)","el.onclick = fn()","el.click(fn)","el.bind('click')"], a:0,
+            e:"Pass the function itself, without parentheses — otherwise it runs immediately." }
+        ]}
+    ]
+  },
+
+  {
+    id:"python", name:"Python", tag:"Data, AI, backend and automation",
+    open:{ label:"Python — Official Tutorial", url:"[docs.python.org](https://docs.python.org/3/tutorial/)" },
+    lessons:[
+      { id:"py-1", title:"Variables, types and truthiness",
+        goal:"Understand dynamic typing and Python's rules for what counts as false.",
+        body:"Python infers types at runtime, and type hints are documentation rather than enforcement. Single slash / is true division and always gives a float; double slash // is floor division. Empty containers, 0, '' and None are all falsy.",
+        code:"name: str = 'Ana'\nscore = 0\nscore += 10\n\nprint(type(3 / 2))   # <class 'float'>\nprint(type(3 // 2))  # <class 'int'>\n\nif not []:\n    print('an empty list is falsy')",
+        quiz:[
+          { q:"What is type(3 / 2) in Python 3?",
+            o:["<class 'float'>","<class 'int'>","<class 'str'>","it raises"], a:0,
+            e:"/ is always true division. Use // for floor division that stays an int." },
+          { q:"Which value is falsy?",
+            o:["An empty list []","The string '0'","A non-empty dict","The number 1"], a:0,
+            e:"Empty containers, 0, '' and None are falsy — handy for `if not items:`." }
+        ]},
+      { id:"py-2", title:"Lists, dicts and comprehensions",
+        goal:"Store and transform collections the idiomatic Python way.",
+        body:"Lists are ordered and mutable; dicts map keys to values; sets hold unique values. A list comprehension builds a new list in one readable line and is generally faster than a for-loop with append. In a dict, the in operator tests keys, not values.",
+        code:"nums = [1, 2, 3, 4, 5]\nevens = [n for n in nums if n % 2 == 0]   # [2, 4]\nsquares = {n: n*n for n in nums}          # dict comprehension\n\nages = {'Al': 22, 'Bea': 31}\nprint('Al' in ages)          # True — key lookup\nfor k, v in ages.items():\n    print(k, v)",
+        quiz:[
+          { q:"What does [n*2 for n in [1,2,3]] produce?",
+            o:["[2, 4, 6]","[1, 2, 3]","A generator object","An error"], a:0,
+            e:"A list comprehension. Swap the brackets for parentheses to get a generator." },
+          { q:"What does 'Al' in {'Al': 22} test?",
+            o:["Whether 'Al' is a key","Whether 'Al' is a value","Whether the dict is empty","The dict length"], a:0,
+            e:"in on a dict checks keys. Use .values() to test values." }
+        ]},
+      { id:"py-3", title:"Functions, args and lambdas",
+        goal:"Write flexible functions with defaults, *args and **kwargs.",
+        body:"Parameters with defaults must come after those without. *args collects extra positional arguments into a tuple and **kwargs collects keyword arguments into a dict. A lambda is an anonymous function limited to a single expression.",
+        code:"def add(a, b=0):\n    return a + b\n\ndef total(*nums):\n    return sum(nums)\n\ndef make_user(**fields):\n    return {'id': 1, **fields}\n\ndouble = lambda x: x * 2\nprint(total(1, 2, 3))   # 6",
+        quiz:[
+          { q:"What does *args collect?",
+            o:["Extra positional arguments as a tuple","Keyword arguments as a dict","A single argument","Nothing"], a:0,
+            e:"**kwargs collects keyword arguments into a dict." },
+          { q:"What is a lambda?",
+            o:["An anonymous function containing a single expression","A class","A decorator","A module"], a:0,
+            e:"If you need statements or a name, use def instead." }
+        ]},
+      { id:"py-4", title:"Control flow, loops and enumerate",
+        goal:"Loop with index and value at once, and control loop exit cleanly.",
+        body:"for iterates over any iterable. enumerate gives index and value together. range produces numbers lazily. break exits the loop, continue skips to the next iteration, and the optional else clause on a loop runs only if it finished without break.",
+        code:"for i, n in enumerate(nums):\n    if n > 3:\n        print(i, n)\n    else:\n        continue\n\nfor i in range(3):\n    pass\n\nfor n in nums:\n    if n == 4:\n        print('found')\n        break\nelse:\n    print('never found')",
+        quiz:[
+          { q:"What does enumerate(['a','b']) yield?",
+            o:["(index, value) pairs","Values only","Indexes only","A dict"], a:0,
+            e:"That is why the idiom is `for i, v in enumerate(items):`." },
+          { q:"When does a loop's else clause run?",
+            o:["Only if the loop finished without hitting break","Always","Only on error","Never"], a:0,
+            e:"It pairs well with searching: else means 'not found'." }
+        ]},
+      { id:"py-5", title:"Classes and dataclasses",
+        goal:"Model data with classes and drop the boilerplate with @dataclass.",
+        body:"__init__ runs when an instance is created and always takes self. @dataclass generates __init__, __repr__ and equality from the field declarations, which is exactly what you want for a plain data holder.",
+        code:"from dataclasses import dataclass\n\n@dataclass\nclass User:\n    name: str\n    age: int = 0\n\n    def greet(self):\n        return f'Hi {self.name}'\n\nu = User('Ana', 22)\nprint(u.greet(), u)   # Hi Ana  User(name='Ana', age=22)",
+        quiz:[
+          { q:"What is __init__?",
+            o:["The instance constructor","A destructor","A static method","A class variable"], a:0,
+            e:"It is called on creation and receives self as its first parameter." },
+          { q:"What does @dataclass give you?",
+            o:["Auto-generated __init__, __repr__ and equality","Faster runtime","A database table","Automatic validation"], a:0,
+            e:"It removes boilerplate from classes that mainly hold data." }
+        ]},
+      { id:"py-6", title:"Files and error handling",
+        goal:"Read files safely and fail gracefully.",
+        body:"The with statement is a context manager: it closes the file even if an exception is raised inside the block. Catch specific exceptions rather than bare except, so real bugs are not silently swallowed.",
+        code:"import json\n\ntry:\n    with open('data.json') as f:\n        data = json.load(f)\nexcept FileNotFoundError:\n    data = {}\nexcept json.JSONDecodeError as err:\n    print('Bad JSON:', err)\nfinally:\n    print('done')",
+        quiz:[
+          { q:"Why use with open(...) as f rather than open() alone?",
+            o:["The file is closed automatically, even on exception","It is faster","It encrypts the file","It loads it into memory"], a:0,
+            e:"Context managers guarantee cleanup, which manual close() calls often miss." },
+          { q:"Which is better practice?",
+            o:["except ValueError:","except:","except Exception: pass","no handling at all"], a:0,
+            e:"Catching specific exceptions keeps genuine bugs visible instead of hiding them." }
+        ]}
+    ]
+  },
+
+  {
+    id:"sql", name:"SQL", tag:"Databases — every developer needs this",
+    open:{ label:"freeCodeCamp — Relational Databases", url:"[freecodecamp.org](https://www.freecodecamp.org/learn/relational-databases-v9/)" },
+    lessons:[
+      { id:"sql-1", title:"SELECT, WHERE and ORDER BY",
+        goal:"Read exactly the rows and columns you need.",
+        body:"SELECT chooses columns, FROM chooses the table, WHERE filters rows, ORDER BY sorts and LIMIT caps the result. Clauses must appear in that order. String literals use single quotes.",
+        code:"SELECT name, age\nFROM users\nWHERE age >= 18\n  AND country = 'PH'\nORDER BY age DESC\nLIMIT 10;",
+        quiz:[
+          { q:"Which clause order is valid?",
+            o:["SELECT ... FROM ... WHERE ... ORDER BY ... LIMIT","WHERE ... SELECT ... FROM","FROM ... SELECT ... WHERE","ORDER BY ... SELECT ... FROM"], a:0,
+            e:"Filtering with WHERE happens before sorting and limiting." },
+          { q:"What does LIMIT 10 do?",
+            o:["Returns at most 10 rows","Skips 10 rows","Sorts by 10","Truncates the table"], a:0,
+            e:"LIMIT caps the row count; OFFSET skips rows for pagination." }
+        ]},
+      { id:"sql-2", title:"Joins",
+        goal:"Combine tables and know what a missing match looks like.",
+        body:"INNER JOIN keeps only matching rows from both tables. LEFT JOIN keeps every row from the left table and fills NULLs where the right side has no match — which is why LEFT JOIN plus IS NULL is the classic 'find the orphans' query.",
+        code:"SELECT u.name, o.total\nFROM users u\nINNER JOIN orders o ON o.user_id = u.id;\n\n-- users who never ordered\nSELECT u.name\nFROM users u\nLEFT JOIN orders o ON o.user_id = u.id\nWHERE o.id IS NULL;",
+        quiz:[
+          { q:"With LEFT JOIN, what happens when there is no match on the right?",
+            o:["The left row is kept and right columns are NULL","The row disappears","The query errors","A default row is invented"], a:0,
+            e:"That is why `WHERE right.id IS NULL` finds unmatched left rows." },
+          { q:"What does INNER JOIN return?",
+            o:["Only rows matching in both tables","All rows from both tables","Left table only","Right table only"], a:0,
+            e:"It is the intersection defined by the join condition." }
+        ]},
+      { id:"sql-3", title:"Aggregation: GROUP BY and HAVING",
+        goal:"Summarise data and filter the summary.",
+        body:"COUNT, SUM, AVG, MIN and MAX collapse many rows into one. GROUP BY forms the groups, and every non-aggregated column in SELECT must appear in GROUP BY. WHERE filters rows before grouping; HAVING filters groups after.",
+        code:"SELECT department,\n       COUNT(*) AS headcount,\n       AVG(salary) AS avg_pay\nFROM employees\nWHERE active = true\nGROUP BY department\nHAVING COUNT(*) > 3\nORDER BY avg_pay DESC;",
+        quiz:[
+          { q:"Which clause filters groups after aggregation?",
+            o:["HAVING","WHERE","ORDER BY","LIMIT"], a:0,
+            e:"WHERE runs before GROUP BY, HAVING runs after it." },
+          { q:"A column in SELECT is not aggregated. What must you do?",
+            o:["Include it in GROUP BY","Wrap it in COUNT","Remove it","Nothing"], a:0,
+            e:"Otherwise the database cannot know which value to show per group." }
+        ]},
+      { id:"sql-4", title:"Indexes and query performance",
+        goal:"Make slow queries fast and prove it with EXPLAIN.",
+        body:"An index is a sorted structure the database can seek into instead of scanning every row. Foreign key columns that appear in WHERE or JOIN conditions need one — without it, a filtered query becomes a full table scan.",
+        code:"CREATE INDEX orders_user_id_idx\nON orders USING btree (user_id);\n\nEXPLAIN ANALYZE\nSELECT * FROM orders WHERE user_id = 'abc';",
+        quiz:[
+          { q:"Why index a foreign key column?",
+            o:["Filtered queries and joins on it get much faster","It shrinks the table","It adds a constraint","It sorts the data permanently"], a:0,
+            e:"Without an index, filtering on that column scans every row." },
+          { q:"What does EXPLAIN show you?",
+            o:["The query plan the database chose","A faster version of the query","The index definition","The table schema"], a:0,
+            e:"Look for an index scan instead of a sequential scan." }
+        ]}
+    ]
+  },
+
+  {
+    id:"git", name:"Git & GitHub", tag:"Required for every developer job",
+    open:{ label:"Pro Git Book — free and open", url:"[git-scm.com](https://git-scm.com/book/en/v2)" },
+    lessons:[
+      { id:"git-1", title:"Repositories, staging and commits",
+        goal:"Track your work and read the history.",
+        body:"Git has three places for your work: the working directory, the staging area, and the repository. git add moves changes into staging, git commit records them permanently. A .gitignore file lists things Git should never track — dependencies, build output, secrets.",
+        code:"git init\ngit add .\ngit commit -m \"Add login form\"\ngit status\ngit log --oneline --graph",
+        quiz:[
+          { q:"What does git add do?",
+            o:["Stages changes for the next commit","Uploads to GitHub","Saves permanently","Deletes files"], a:0,
+            e:"Staging lets you choose exactly what goes into the commit." },
+          { q:"What belongs in .gitignore?",
+            o:["Dependencies, build output and secret files","Source code","README files","Test files you want tracked"], a:0,
+            e:"node_modules/, dist/ and .env are the classic entries." }
+        ]},
+      { id:"git-2", title:"Branches and merges",
+        goal:"Work in isolation and combine changes deliberately.",
+        body:"A branch is a movable pointer to a commit, so creating one is instant. git checkout -b makes a branch and switches to it. Merging brings the changes back; if both sides edited the same lines you resolve a conflict, then commit the resolution.",
+        code:"git checkout -b feature/login\ngit add .\ngit commit -m \"Build login form\"\n\ngit checkout main\ngit merge feature/login",
+        quiz:[
+          { q:"What does git checkout -b feature/login do?",
+            o:["Creates the branch and switches to it","Switches to an existing branch","Deletes the branch","Merges the branch"], a:0,
+            e:"Without -b it would only switch, and fail if the branch does not exist." },
+          { q:"What is a merge conflict?",
+            o:["Both branches changed the same lines","The repository is corrupted","Wrong credentials","A network error"], a:0,
+            e:"Git asks you to choose or combine, then you commit the result." }
+        ]},
+      { id:"git-3", title:"Remotes and pull requests",
+        goal:"Share work and collaborate without losing anyone's commits.",
+        body:"A remote is a shared copy of the repository. git push uploads your commits, git pull brings down and integrates others'. git pull --rebase replays your local commits on top of the remote's, giving linear history. A pull request is the review step before merging into main.",
+        code:"git clone [github.com](https://github.com/user/repo.git\ngit) remote -v\ngit push -u origin main\ngit pull --rebase origin main",
+        quiz:[
+          { q:"What is a pull request for?",
+            o:["Review and CI before merging into the main branch","Backing up code","Running tests automatically","Deploying"], a:0,
+            e:"It creates a discussion and status checks around the proposed merge." },
+          { q:"What does git pull --rebase do?",
+            o:["Fetches the remote and replays your commits on top of it","Uploads commits","Deletes local commits","Creates a branch"], a:0,
+            e:"It avoids an extra merge commit, keeping history linear." }
+        ]},
+      { id:"git-4", title:"Undoing mistakes safely",
+        goal:"Fix errors without destroying other people's history.",
+        body:"git restore discards local file changes. git reset --soft HEAD~1 undoes a commit but keeps the changes staged. On a shared branch use git revert: it creates a new commit that reverses an earlier one, so nobody's history is rewritten. git stash parks unfinished work while you switch branches.",
+        code:"git restore src/file.js      # discard local edits to one file\ngit reset --soft HEAD~1       # undo last commit, keep changes staged\ngit revert <commit>           # safe on shared branches\ngit stash                     # park unfinished work",
+        quiz:[
+          { q:"Which is safe on a shared branch?",
+            o:["git revert","git reset --hard","git push --force","deleting the branch"], a:0,
+            e:"revert only adds a commit, so nobody else's history changes underneath them." },
+          { q:"What does git stash do?",
+            o:["Sets aside uncommitted changes temporarily","Deletes a branch","Commits to the remote","Creates a backup repo"], a:0,
+            e:"Useful when you need to switch branches mid-change. git stash pop brings it back." }
+        ]}
+    ]
+  },
+
+  {
+    id:"php", name:"PHP", tag:"Server-side web, WordPress, Laravel",
+    open:{ label:"PHP Manual — Getting Started", url:"[php.net](https://www.php.net/manual/en/getting-started.php)" },
+    lessons:[
+      { id:"php-1", title:"Variables, types and output",
+        goal:"Write PHP that renders on a page and handles types predictably.",
+        body:"PHP variables start with a dollar sign and need no declaration, and PHP is loosely typed by default. declare(strict_types=1) at the top of a file turns silent type coercion into errors, which catches real bugs early. Double quotes interpolate variables, single quotes do not.",
+        code:"<?php\ndeclare(strict_types=1);\n\n$name = 'Ana';\n$score = 0;\n$score += 10;\n\necho \"$name has $score points\";\nvar_dump($score);   // int(10)",
+        quiz:[
+          { q:"How do you declare a variable in PHP?",
+            o:["$name = 'Ana';","name = 'Ana';","var name = 'Ana';","let name = 'Ana';"], a:0,
+            e:"The dollar sign prefix is mandatory on every variable." },
+          { q:"What does declare(strict_types=1) do?",
+            o:["Type mismatches raise errors instead of being silently coerced","Enables classes","Is required syntax","Speeds up the script"], a:0,
+            e:"It makes function argument and return types enforced rather than best-effort." }
+        ]},
+      { id:"php-2", title:"Arrays and array functions",
+        goal:"Handle indexed and associative arrays like a PHP developer.",
+        body:"PHP has one array type that doubles as both a list and a map. Keys may be integers or strings, and the array_* functions cover most transformations you would otherwise loop for.",
+        code:"$users = [\n  ['name' => 'Al',  'age' => 22],\n  ['name' => 'Bea', 'age' => 31],\n];\n\n$names = array_column($users, 'name');           // ['Al','Bea']\n$ages  = array_map(fn($u) => $u['age'], $users);  // [22, 31]\n$adult = array_filter($users, fn($u) => $u['age'] >= 25);\n\necho $users[0]['name'];",
+        quiz:[
+          { q:"What is an associative array in PHP?",
+            o:["An array using string keys","An array with integer indexes only","An object","A string"], a:0,
+            e:"PHP arrays handle both, and indexes need not be sequential." },
+          { q:"What does array_column($users, 'name') return?",
+            o:["An array of all the 'name' values","A sorted array","The first row","A filtered array"], a:0,
+            e:"It is the shortcut for mapping one key out of each row." }
+        ]},
+      { id:"php-3", title:"Functions, scope and security",
+        goal:"Write reusable functions and never concatenate user input into SQL.",
+        body:"Functions need the $ prefix on parameters and are case-insensitive by name. Arrow functions in PHP capture outer variables by value. Never build SQL by string concatenation — prepared statements send the query and the data separately, which is what makes SQL injection impossible.",
+        code:"function total(int ...$nums): int {\n    return array_sum($nums);\n}\n\n$double = fn(int $x): int => $x * 2;\n\n// Safe: the data never becomes part of the SQL text\n$stmt = $pdo->prepare('SELECT * FROM users WHERE email = ?');\n$stmt->execute([$email]);\n$user = $stmt->fetch();",
+        quiz:[
+          { q:"Why use prepared statements?",
+            o:["They prevent SQL injection by separating query from data","They are faster","They cache results","They validate input"], a:0,
+            e:"The driver sends the SQL and the values separately, so input cannot be read as SQL." },
+          { q:"How is an arrow function written in PHP?",
+            o:["fn($x) => $x * 2","function($x) => $x * 2","($x) -> $x * 2","lambda($x)"], a:0,
+            e:"It automatically captures outer variables by value." }
+        ]},
+      { id:"php-4", title:"Classes, PDO and form handling",
+        goal:"Organise code into classes and treat form input as untrusted.",
+        body:"Constructor property promotion declares and assigns a property in one line. Dependency injection means passing the database in rather than creating it inside the class, which makes the class testable. Validate and filter everything that arrives from $_POST.",
+        code:"class UserRepo {\n    public function __construct(private PDO $db) {}\n\n    public function findByEmail(string $email): array|false {\n        $s = $this->db->prepare('SELECT * FROM users WHERE email = ?');\n        $s->execute([$email]);\n        return $s->fetch();\n    }\n}\n\n$email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);\nif ($email === false) {\n    exit('Invalid email');\n}\n$html = htmlspecialchars($name, ENT_QUOTES, 'UTF-8');",
+        quiz:[
+          { q:"What is constructor property promotion?",
+            o:["Declaring and assigning a property in the constructor signature","A private property","A static property","A trait"], a:0,
+            e:"public function __construct(private PDO $db) does both at once." },
+          { q:"Why is htmlspecialchars needed on output?",
+            o:["It prevents injected HTML and script from executing","It compresses the page","It validates the input","It encrypts the value"], a:0,
+            e:"Escape on output, validate on input — two different jobs." }
+        ]}
+    ]
+  },
+
+  {
+    id:"typescript", name:"TypeScript", tag:"Type-safe JavaScript for real codebases",
+    open:{ label:"TypeScript Handbook", url:"[typescriptlang.org](https://www.typescriptlang.org/docs/handbook/intro.html)" },
+    lessons:[
+      { id:"ts-1", title:"Types, interfaces and annotations",
+        goal:"Describe your data so the compiler catches mistakes before runtime.",
+        body:"TypeScript adds a static type layer over JavaScript. Interfaces describe the shape of an object, the question mark marks a property optional, and an annotation uses a colon: variable: Type. Types are erased at build time, so nothing about them exists at runtime.",
+        code:"interface User {\n  name: string;\n  age?: number;   // optional\n}\n\nconst u: User = { name: 'Ana' };\n\nfunction greet(user: User): string {\n  return 'Hi ' + user.name;\n}",
+        quiz:[
+          { q:"What does age?: number mean?",
+            o:["The property is optional","The property is read-only","The property is nullable only","The property is private"], a:0,
+            e:"Optional means it may be absent or undefined." },
+          { q:"Which is the annotation syntax?",
+            o:["const u: User = { name: 'Ana' }","const u = User:{ name: 'Ana' }","User u = { name: 'Ana' }","const u = { name: 'Ana' } as User!"], a:0,
+            e:"A colon declares the type; `as` asserts it without checking." }
+        ]},
+      { id:"ts-2", title:"Functions, generics and utility types",
+        goal:"Write functions that keep their type information through the call.",
+        body:"Generics let one function work for many types without losing safety — T is inferred from the arguments. Utility types such as Readonly, Partial and Pick transform existing types instead of duplicating them.",
+        code:"function first<T>(arr: T[]): T | undefined {\n  return arr[0];\n}\n\nconst n = first([1, 2, 3]);   // number | undefined\n\ntype Draft = Partial<User>;\ntype Frozen = Readonly<{ role: 'admin' | 'user' }>;",
+        quiz:[
+          { q:"What does first([1,2,3]) return?",
+            o:["number | undefined","any","number","Array<number>"], a:0,
+            e:"T is inferred as number, and undefined is possible on an empty array." },
+          { q:"What does Partial<User> produce?",
+            o:["A type with all of User's properties optional","A type with none of them","A read-only User","A runtime object"], a:0,
+            e:"Utility types build new types from existing ones without duplication." }
+        ]},
+      { id:"ts-3", title:"Unions, narrowing and discriminated unions",
+        goal:"Model states precisely and handle every case.",
+        body:"A union says a value may be one of several types. Narrowing with typeof, in or equality checks tells the compiler which branch you are in. A discriminated union gives each variant a shared literal tag, which makes switch statements exhaustive and self-checking.",
+        code:"type Status = 'idle' | 'loading' | 'done';\n\nfunction label(s: Status): string {\n  switch (s) {\n    case 'idle':    return 'Waiting';\n    case 'loading': return 'Loading';\n    case 'done':    return 'Finished';\n  }\n}\n\ntype Result =\n  | { ok: true;  data: string }\n  | { ok: false; error: Error };",
+        quiz:[
+          { q:"What is a discriminated union?",
+            o:["A union whose members share a literal tag property","A union of primitives","An array of unions","An optional union"], a:0,
+            e:"The tag lets the compiler narrow to exactly one variant inside each branch." },
+          { q:"Which check narrows a value of type string | number?",
+            o:["typeof v === 'string'","v.type === string","v is string","v.toString()"], a:0,
+            e:"typeof, in, instanceof and equality checks all narrow union types." }
+        ]},
+      { id:"ts-4", title:"Avoiding any and unsafe assumptions",
+        goal:"Replace any with unknown plus real validation.",
+        body:"any switches off type checking entirely and spreads silently through everything it touches. unknown is the safe counterpart: you must narrow it before use. A type guard is a function whose return type is a predicate such as v is User, which teaches the compiler what your runtime check proved.",
+        code:"function isUser(v: unknown): v is { id: string } {\n  return typeof v === 'object' && v !== null && 'id' in v;\n}\n\nconst raw: unknown = JSON.parse(input);\nif (isUser(raw)) {\n  console.log(raw.id);   // safely narrowed\n}",
+        quiz:[
+          { q:"Why prefer unknown over any?",
+            o:["It forces you to narrow before use, so checking is not disabled","It is faster at runtime","It compiles to less code","It supports more types"], a:0,
+            e:"any removes all safety; unknown keeps it and demands proof." },
+          { q:"What is a type guard?",
+            o:["A function returning a predicate type such as v is User","A runtime assertion","A try/catch block","A generic constraint"], a:0,
+            e:"The predicate tells the compiler what your runtime check established." }
+        ]}
+    ]
+  },
+
+  {
+    id:"java", name:"Java", tag:"Enterprise backends and Android",
+    open:{ label:"dev.java — Official Tutorials", url:"[dev.java](https://dev.java/learn/)" },
+    lessons:[
+      { id:"java-1", title:"Classes, objects and encapsulation",
+        goal:"Model data with private fields and controlled access.",
+        body:"A class defines fields and behaviour; an object is one instance. Marking fields private stops outside code from depending on your internals, and final prevents reassignment. Constructors set the initial state, and this distinguishes a parameter from a field of the same name.",
+        code:"public class User {\n    private final String name;\n    private int score;\n\n    public User(String name) {\n        this.name = name;\n    }\n\n    public String getName() { return name; }\n    public void addPoints(int p) { this.score += p; }\n}",
+        quiz:[
+          { q:"What does private final on a field give you?",
+            o:["No outside access and no reassignment after construction","Public but read-only","Static storage","Lazy initialisation"], a:0,
+            e:"Encapsulation: outside code goes through your methods, so internals can change." },
+          { q:"What is this.name = name for in a constructor?",
+            o:["It assigns the instance field from the parameter","It creates a static field","It calls a parent constructor","It is an error"], a:0,
+            e:"this refers to the instance when a parameter shadows the field name." }
+        ]},
+      { id:"java-2", title:"Types, generics and collections",
+        goal:"Use the collections framework with type safety.",
+        body:"Java is statically typed and has primitives (int, boolean) plus wrapper classes (Integer, Boolean). Autoboxing converts between them automatically. Generic collections such as List<String> make the compiler enforce what you can put in, replacing untyped collections.",
+        code:"import java.util.*;\n\nList<Integer> nums = new ArrayList<>();\nnums.add(1);\nnums.add(2);\n\nMap<String, Integer> ages = new HashMap<>();\nages.put(\"Ana\", 22);\n\nfor (int n : nums) {\n    System.out.println(n);\n}",
+        quiz:[
+          { q:"What is autoboxing?",
+            o:["Automatic conversion between a primitive and its wrapper class","Converting a String to an int","Copying a collection","Casting a superclass to a subclass"], a:0,
+            e:"Integer.parseInt is parsing, which is a different thing entirely." },
+          { q:"Which declaration is generic?",
+            o:["List<Integer> nums","List nums","int[] nums","Array nums"], a:0,
+            e:"Generics move type errors from runtime to compile time." }
+        ]},
+      { id:"java-3", title:"Inheritance, interfaces and polymorphism",
+        goal:"Program against a contract rather than a concrete class.",
+        body:"A class extends one superclass and implements any number of interfaces. An interface is a contract of methods with no implementation. Polymorphism means callers depend on the interface, so any implementation can be substituted.",
+        code:"interface Shape {\n    double area();\n}\n\nclass Circle implements Shape {\n    private final double r;\n    Circle(double r) { this.r = r; }\n    public double area() { return Math.PI * r * r; }\n}\n\nList<Shape> shapes = List.of(new Circle(1), new Circle(2));\ndouble total = shapes.stream().mapToDouble(Shape::area).sum();",
+        quiz:[
+          { q:"Which keyword implements an interface?",
+            o:["implements","extends","inherit","uses"], a:0,
+            e:"extends is for a superclass; implements is for interfaces, and you can have many." },
+          { q:"Why is polymorphism useful?",
+            o:["Callers depend on one interface while implementations vary","It is faster","It saves memory","It adds types"], a:0,
+            e:"You can add new implementations without touching calling code." }
+        ]},
+      { id:"java-4", title:"Exceptions, lambdas and streams",
+        goal:"Handle failure explicitly and process collections declaratively.",
+        body:"Checked exceptions must be caught or declared with throws, and the compiler enforces it. Unchecked exceptions signal programming errors. Streams and lambdas express data pipelines: filter, map, then a terminal operation such as collect or forEach.",
+        code:"try {\n    int x = Integer.parseInt(\"abc\");\n} catch (NumberFormatException e) {\n    System.out.println(\"Not a number: \" + e.getMessage());\n}\n\nList<Integer> evens = nums.stream()\n    .filter(n -> n % 2 == 0)\n    .map(n -> n * 10)\n    .collect(Collectors.toList());",
+        quiz:[
+          { q:"What is a checked exception?",
+            o:["One the compiler requires you to catch or declare","One that cannot be caught","A syntax error","A runtime-only error"], a:0,
+            e:"NumberFormatException is a classic example of an unchecked one." },
+          { q:"In a stream pipeline, which is the terminal operation?",
+            o:["collect()","filter()","map()","peek()"], a:0,
+            e:"Streams are lazy — nothing runs until a terminal operation is called." }
+        ]}
+    ]
+  },
+
+  {
+    id:"cpp", name:"C / C++", tag:"Systems, games and embedded",
+    open:{ label:"cppreference.com", url:"[en.cppreference.com](https://en.cppreference.com/w/)" },
+    lessons:[
+      { id:"cpp-1", title:"Variables, references and pointers",
+        goal:"Understand the difference between a value, a reference and a pointer.",
+        body:"A pointer stores an address and can be null or reseated; dereferencing with * reads the value it points at. A reference is an alias that must be initialised and can never be null. Taking &x gives the address of x.",
+        code:"#include <iostream>\n\nint main() {\n    int x = 10;\n    int* p = &x;   // address of x\n    int& r = x;    // alias for x\n\n    *p = 20;\n    std::cout << x << ' ' << r << '\\n';   // 20 20\n}",
+        quiz:[
+          { q:"What does int& r = x; create?",
+            o:["A reference, an alias for x","A pointer to x","A copy of x","Nothing valid"], a:0,
+            e:"A reference must be initialised and cannot be reseated or null." },
+          { q:"What does *p read when p is a pointer?",
+            o:["The value stored at the address p holds","The address itself","The size","The type"], a:0,
+            e:"Dereferencing. The bare p gives the address instead." }
+        ]},
+      { id:"cpp-2", title:"Control flow and range-based loops",
+        goal:"Iterate containers safely and modern-ly.",
+        body:"C++11 added range-based for, which iterates any container without index arithmetic. break exits the loop and continue skips an iteration. Always compare signed and unsigned types carefully — mixing them silently converts and can surprise you.",
+        code:"#include <vector>\n#include <iostream>\n\nstd::vector<int> nums{1, 2, 3, 4, 5};\n\nfor (int n : nums) {\n    if (n % 2 == 0) std::cout << n << ' ';\n}\n\nfor (const auto& n : nums) {   // no copies\n    std::cout << n;\n}",
+        quiz:[
+          { q:"What is for (int n : nums)?",
+            o:["A range-based for loop added in C++11","A macro","A while loop","A function call"], a:0,
+            e:"It iterates any container with begin/end, no index arithmetic needed." },
+          { q:"Why write const auto& n in the iteration?",
+            o:["It avoids copying each element and forbids mutation","It is required syntax","It sorts the container","It reserves memory"], a:0,
+            e:"For small primitives a plain copy is fine; for class types the reference matters." }
+        ]},
+      { id:"cpp-3", title:"Classes, RAII and smart pointers",
+        goal:"Tie resource lifetime to object lifetime so leaks become impossible.",
+        body:"RAII — Resource Acquisition Is Initialization — means a constructor acquires a resource and the destructor releases it, so cleanup happens automatically even when an exception unwinds the stack. const at the end of a method signature promises it will not modify the object.",
+        code:"#include <memory>\n#include <string>\n\nclass User {\n    std::string name_;\npublic:\n    explicit User(std::string name) : name_(std::move(name)) {}\n    const std::string& name() const { return name_; }   // const method\n};\n\nstd::unique_ptr<User> u = std::make_unique<User>(\"Ana\");\n// freed automatically when u goes out of scope",
+        quiz:[
+          { q:"Why prefer std::unique_ptr to a raw new?",
+            o:["It frees the object automatically when it leaves scope, even on exception","It is faster","It shares ownership","It avoids the heap"], a:0,
+            e:"That is RAII applied to heap memory — no leaks on early return or throw." },
+          { q:"What does a trailing const promise?",
+            o:["The method will not modify the object","A constant return value","A static method","A virtual override"], a:0,
+            e:"It lets you call the method on const objects and const references." }
+        ]}
+    ]
+  }
+];
+
+/* ================================================================
+   3) KEYWORD MAP — powers the code-aware test builder
+   ================================================================ */
+const KEYWORDS = {
+  "const":"variables-types","let":"variables-types","var":"variables-types","typeof":"variables-types",
+  "=>":"functions-closures","function ":"functions-closures","def ":"functions-args","fn(":"functions-args","lambda":"functions-args",
+  "class ":"classes-objects","__init__":"classes-objects","@dataclass":"classes-dataclasses","constructor":"classes-objects",
+  "extends":"inheritance-interfaces","implements":"inheritance-interfaces","interface ":"types-annotations",
+  "for ":"control-flow","for(":"control-flow","while":"control-flow","foreach":"control-flow","switch":"control-flow","else":"control-flow","elif":"control-flow","enumerate":"control-flow",
+  ".map(":"arrays-objects",".filter(":"arrays-objects",".reduce(":"arrays-objects","array_column":"arrays-functions","list comprehension":"lists-dicts","{}":"arrays-objects",
+  "async":"promises-async","await":"promises-async","promise":"promises-async","fetch(":"promises-async",
+  "document.":"dom-events","addEventListener":"dom-events",
+  "select ":"select-where","select\\n":"select-where"," where ":"select-where","order by":"select-where","group by":"group-by-having","having":"group-by-having","join":"joins","create index":"indexes-performance","explain":"indexes-performance",
+  "<div":"html-structure","<article":"html-structure","<section":"html-structure","<!doctype":"html-structure",
+  "display:":"flexbox-grid","flex":"flexbox-grid","grid-template":"flexbox-grid","@media":"responsive-css","box-sizing":"selectors-box-model","padding":"selectors-box-model",
+  "public ":"classes-objects","private ":"classes-objects","static ":"types-generics","stream()":"exceptions-streams","std::":"classes-raii","std::unique_ptr":"classes-raii","*p":"pointers-references",
+  "$":"php-variables","<?php":"php-variables","echo ":"php-variables","array_map":"arrays-functions","$_post":"php-security","$pdo":"php-classes-pdo",
+  "git ":"git-basics","commit":"git-basics","branch":"git-branches",".gitignore":"git-basics","merge":"git-branches","rebase":"git-remotes","stash":"git-undo",
+  "try":"errors-files","except":"errors-files","catch":"exceptions-streams","finally":"errors-files","with open":"errors-files",
+  "<t>":"functions-generics","readonly":"functions-generics","unknown":"avoid-any"
+};
+
+/* ================================================================
+   4) STATE + HELPERS
+   ================================================================ */
+const state = {
+  user:null, mode:'login', langId:null, lessonId:null,
+  progress:{}, saved:[], quiz:null, activeQuiz:null
+};
+const PASS = 0.7;
+const LS = { session:'cq_session', progress:'cq_progress_v2', saved:'cq_saved_v2' };
+const read  = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+const write = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+const $ = s => document.querySelector(s);
+
+function allLessons(langId){
+  const lang = CURRICULUM.find(l => l.id === langId);
+  return lang ? lang.lessons : [];
+}
+function findLesson(langId, lessonId){
+  return allLessons(langId).find(l => l.id === lessonId) || null;
+}
+function progressKey(langId, lessonId){ return langId + '::' + lessonId; }
+function isDone(langId, lessonId){
+  return !!state.progress[progressKey(langId, lessonId)]?.passed;
+}
+/* A lesson is unlocked when it is first, or the previous one is passed */
+function isUnlocked(langId, index){
+  if(index === 0) return true;
+  const prev = allLessons(langId)[index - 1];
+  return prev ? isDone(langId, prev.id) : false;
+}
+function completedCount(langId){
+  return allLessons(langId).filter(l => isDone(langId, l.id)).length;
+}
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+/* ================================================================
+   5) AUTH
+   ================================================================ */
+function toast(el, text, kind){
+  el.textContent = text;
+  el.className = 'msg on ' + (kind || '');
+  if(kind === 'ok') setTimeout(() => { el.className = 'msg'; }, 4500);
+}
+$('#tabLogin').onclick  = () => { state.mode='login';  $('#tabLogin').classList.add('on');  $('#tabSignup').classList.remove('on');
+  $('#signupExtra').classList.add('hide');    $('#authBtn').textContent='Log in'; };
+$('#tabSignup').onclick = () => { state.mode='signup'; $('#tabSignup').classList.add('on'); $('#tabLogin').classList.remove('on');
+  $('#signupExtra').classList.remove('hide'); $('#authBtn').textContent='Create account'; };
+
+$('#authBtn').onclick = async () => {
+  const email = $('#email').value.trim();
+  const password = $('#password').value;
+  const msg = $('#authMsg');
+  if(!email || !password) return toast(msg, 'Email and password are required.', 'err');
+  if(password.length < 6)  return toast(msg, 'Password must be at least 6 characters.', 'err');
+
+  if(!configured){
+    const uname = $('#username').value.trim() || email.split('@')[0];
+    state.user = { email, username:uname, id:'local-' + btoa(email).replace(/=/g,'') };
+    write(LS.session, state.user);
+    await enterApp();
+    return;
+  }
+
+  $('#authBtn').disabled = true;
+  try{
+    if(state.mode === 'signup'){
+      const uname = $('#username').value.trim() || email.split('@')[0];
+      const { data, error } = await sb.auth.signUp({ email, password, options:{ data:{ username:uname } } });
+      if(error) throw error;
+      if(!data.session){
+        toast(msg, 'Confirmation email sent. Verify your address, then log in.', 'ok');
+        $('#tabLogin').click();
+        return;
+      }
+      state.user = { email:data.user.email, username:uname, id:data.user.id };
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      state.user = {
+        email:data.user.email,
+        username:data.user.user_metadata?.username || data.user.email.split('@')[0],
+        id:data.user.id
+      };
+    }
+    await enterApp();
+  }catch(err){
+    toast(msg, err.message || 'Could not sign you in.', 'err');
+  }finally{
+    $('#authBtn').disabled = false;
+  }
+};
+
+$('#logoutBtn').onclick = async () => {
+  if(sb){ try { await sb.auth.signOut(); } catch {} }
+  localStorage.removeItem(LS.session);
+  state.user = null;
+  $('#app').classList.add('hide');
+  $('#auth').classList.remove('hide');
+  $('#password').value = '';
+};
+
+async function enterApp(){
+  $('#auth').classList.add('hide');
+  $('#app').classList.remove('hide');
+  $('#whoami').textContent = '@' + state.user.username;
+  $('#whoami').title = state.user.email;
+  state.progress = read(LS.progress, {});
+  state.saved    = read(LS.saved, []);
+  const cloud = sb && state.user.id && !String(state.user.id).startsWith('local-');
+  if(cloud) await Promise.all([ pullProgress(), pullSaved() ]);
+  renderCurriculum();
+  renderSaved();
+  populateSelects();
+}
+
+/* ---- cloud sync: RLS keeps each account isolated ---- */
+async function pullProgress(){
+  try{
+    const { data, error } = await sb.from('lesson_progress')
+      .select('language,lesson_id,score,total,passed,attempts');
+    if(error) throw error;
+    const map = {};
+    (data || []).forEach(r => {
+      map[r.language + '::' + r.lesson_id] = {
+        score:r.score, total:r.total, passed:r.passed, attempts:r.attempts
+      };
+    });
+    state.progress = map;
+    write(LS.progress, map);
+  }catch(e){ console.warn('progress pull:', e.message); }
+}
+
+async function saveLessonResult(langId, lessonId, score, total, passed){
+  const key = progressKey(langId, lessonId);
+  const prev = state.progress[key];
+  const attempts = (prev?.attempts || 0) + 1;
+  const best = Math.max(score, prev?.score || 0);
+  const entry = {
+    score:best, total,
+    passed:(prev?.passed || passed),
+    attempts,
+    lastScore:score,
+    updatedAt:new Date().toISOString()
+  };
+  state.progress[key] = entry;
+  write(LS.progress, state.progress);
+
+  if(!sb || !state.user?.id || String(state.user.id).startsWith('local-')) return;
+  try{
+    await sb.from('lesson_progress').upsert({
+      user_id: state.user.id,
+      language: langId,
+      lesson_id: lessonId,
+      score: entry.score,
+      total,
+      passed: entry.passed,
+      attempts,
+      updated_at: new Date().toISOString()
+    }, { onConflict:'user_id,language,lesson_id' });
+  }catch(e){ console.warn('progress push:', e.message); }
+}
+
+async function pullSaved(){
+  try{
+    const { data, error } = await sb.from('custom_tests')
+      .select('id,language,lesson_id,title,code_input,questions,score,total,created_at')
+      .order('created_at', { ascending:false });
+    if(error) throw error;
+    state.saved = (data || []).map(r => ({
+      id:r.id, langId:r.language, lessonId:r.lesson_id, title:r.title,
+      code:r.code_input, questions:r.questions, score:r.score, total:r.total, at:r.created_at
+    }));
+    write(LS.saved, state.saved);
+  }catch(e){ console.warn('saved pull:', e.message); }
+}
+
+async function pushSaved(entry){
+  state.saved.unshift(entry);
+  write(LS.saved, state.saved);
+  if(!sb || !state.user?.id || String(state.user.id).startsWith('local-')) return;
+  try{
+    const { data } = await sb.from('custom_tests').insert({
+      user_id: state.user.id,
+      language: entry.langId,
+      lesson_id: entry.lessonId,
+      title: entry.title,
+      code_input: entry.code,
+      questions: entry.questions,
+      score: entry.score,
+      total: entry.total
+    }).select('id').single();
+    if(data?.id) entry.id = data.id;
+  }catch(e){ console.warn('saved push:', e.message); }
+}
+
+/* ================================================================
+   6) CURRICULUM VIEW
+   ================================================================ */
+function renderCurriculum(){
+  const host = $('#curriculum');
+  host.innerHTML = '';
+
+  if(!state.langId){
+    host.innerHTML = `
+      <div class="card">
+        <h1>Pick a language to start</h1>
+        <p class="sub">Each course is a path: lessons in order, one practice test after each lesson.
+        Pass a lesson and the next one unlocks. Your scores are saved to your account.</p>
+      </div>
+      <div id="langList"></div>`;
+    const list = $('#langList');
+    CURRICULUM.forEach(l => {
+      const done = completedCount(l.id), tot = l.lessons.length;
+      const pct = Math.round(done / tot * 100);
+      const b = document.createElement('button');
+      b.className = 'langrow';
+      b.innerHTML = `
+        <div class="ring" style="--p:${pct}"><span>${pct}%</span></div>
+        <div>
+          <b>${l.name}</b>
+          <small>${l.tag}</small>
+          <small>${done} of ${tot} lessons completed</small>
+        </div>`;
+      b.onclick = () => { state.langId = l.id; renderCurriculum(); window.scrollTo({top:0}); };
+      list.appendChild(b);
+    });
+    return;
+  }
+
+  const lang = CURRICULUM.find(l => l.id === state.langId);
+  const done = completedCount(lang.id), tot = lang.lessons.length;
+  const pct = Math.round(done / tot * 100);
+
+  host.innerHTML = `
+    <div class="card">
+      <button class="btn sm ghost" id="backBtn">← All languages</button>
+      <h1 style="margin-top:14px">${lang.name}</h1>
+      <p class="sub">${lang.tag} · <a href="${lang.open.url}" target="_blank" rel="noopener">${lang.open.label}</a></p>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <p class="muted">${done} of ${tot} lessons completed · ${pct}%</p>
+      <p class="muted" style="margin-bottom:0">Pass mark: ${Math.round(PASS*100)}% on each lesson test to unlock the next one.</p>
+    </div>
+    <div class="card" id="lessonList">
+      <h2>Lessons in order</h2>
+      <p class="sub">Read the lesson, then take its test. Your score and attempt count are saved.</p>
+    </div>`;
+
+  $('#backBtn').onclick = () => { state.langId = null; state.lessonId = null; renderCurriculum(); };
+
+  const list = $('#lessonList');
+  lang.lessons.forEach((ls, i) => {
+    const unlocked = isUnlocked(lang.id, i);
+    const p = state.progress[progressKey(lang.id, ls.id)];
+    const passed = !!p?.passed;
+    const b = document.createElement('button');
+    b.className = 'lesson';
+    b.disabled = !unlocked;
+    b.innerHTML = `
+      <span class="num ${passed ? 'done' : ''}">${passed ? '✓' : (unlocked ? i + 1 : '🔒')}</span>
+      <span style="flex:1">
+        <b>${escapeHtml(ls.title)}</b>
+        <small>${escapeHtml(ls.goal)}</small>
+        <small>${p
+          ? `${passed ? 'Passed' : 'Not passed'} · best ${p.score}/${p.total} · ${p.attempts} attempt${p.attempts>1?'s':''}`
+          : (unlocked ? 'Not attempted yet' : 'Finish the previous lesson to unlock')}</small>
+      </span>`;
+    if(unlocked){
+      b.onclick = () => { state.lessonId = ls.id; switchView('learn'); renderLesson(); window.scrollTo({top:0,behavior:'smooth'}); };
+    }
+    list.appendChild(b);
+  });
+}
+
+/* ================================================================
+   7) LESSON VIEW — lesson page, then its practice test
+   ================================================================ */
+function renderLesson(){
+  const lang = CURRICULUM.find(l => l.id === state.langId);
+  const ls = findLesson(state.langId, state.lessonId);
+  if(!lang || !ls) return renderCurriculum();
+
+  const idx = lang.lessons.findIndex(l => l.id === ls.id);
+  const prev = lang.lessons[idx - 1];
+  const next = lang.lessons[idx + 1];
+  const p = state.progress[progressKey(lang.id, ls.id)];
+  const passed = !!p?.passed;
+
+  $('#curriculum').innerHTML = `
+    <div class="card">
+      <button class="btn sm ghost" id="backPath">← Back to ${lang.name} path</button>
+      <p class="muted" style="margin:14px 0 4px">Lesson ${idx + 1} of ${lang.lessons.length}</p>
+      <h1>${escapeHtml(ls.title)}</h1>
+      <p class="sub">🎯 ${escapeHtml(ls.goal)}
+        ${p ? `<span class="badge ${passed?'pass':'fail'}">${passed?'Passed':'Best '+p.score+'/'+p.total}</span>` : ''}</p>
+      <p>${escapeHtml(ls.body)}</p>
+      <h3>Example</h3>
+      <pre><code>${escapeHtml(ls.code)}</code></pre>
+    </div>
+
+    <div class="card">
+      <h2>Practice test — ${lang.lessons.length ? '' : ''}${escapeHtml(ls.title)}</h2>
+      <p class="sub">${ls.quiz.length} questions · score ${Math.round(PASS*100)}% or higher to pass and unlock the next lesson.
+      Each answer is checked immediately and explained.</p>
+      <div class="bar"><i id="barFill"></i></div>
+      <p class="muted" id="progText">0 / ${ls.quiz.length} answered</p>
+      <div id="qList"></div>
+      <div id="resultArea"></div>
+      <div class="row" style="margin-top:14px">
+        <button id="nextLesson" class="btn hide">Next lesson →</button>
+        <button id="retake" class="btn ghost hide">Retake test</button>
+      </div>
+    </div>
+
+    ${next ? `<div class="card">
+      <h2>Up next</h2>
+      <p class="sub">${escapeHtml(next.title)}${passed ? ' — now unlocked.' : ' — pass this test to unlock it.'}</p>
+    </div>` : `<div class="card"><h2>Final lesson</h2>
+      <p class="sub">${passed ? 'You have completed this whole path.' : 'Pass this test to complete the path.'}</p></div>`}`;
+
+  $('#backPath').onclick = () => { state.lessonId = null; renderCurriculum(); window.scrollTo({top:0}); };
+
+  state.activeQuiz = {
+    kind:'lesson', langId:lang.id, lessonId:ls.id,
+    questions:ls.quiz.map(q => shuffleQuestion(q)),
+    answers:new Array(ls.quiz.length).fill(null),
+    done:false
+  };
+  renderQuestions($('#qList'), state.activeQuiz, () => onLessonAnswer(state.activeQuiz, ls, lang, next));
+  $('#retake').onclick = () => { state.activeQuiz = null; renderLesson(); window.scrollTo({top:0,behavior:'smooth'}); };
+  if(next) $('#nextLesson').onclick = () => { state.lessonId = next.id; renderLesson(); window.scrollTo({top:0,behavior:'smooth'}); };
+}
+
+function shuffleQuestion(q){
+  const order = q.o.map((_, i) => i).sort(() => Math.random() - 0.5);
+  return { q:q.q, o:order.map(i => q.o[i]), a:order.indexOf(q.a), e:q.e };
+}
+
+function renderQuestions(host, quiz, onAllAnswered){
+  host.innerHTML = '';
+  quiz.questions.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q';
+    card.innerHTML = `<div class="qt">${qi + 1}. ${escapeHtml(q.q)}</div>`;
+    q.o.forEach((opt, oi) => {
+      const b = document.createElement('button');
+      b.className = 'opt';
+      b.textContent = opt;
+      b.onclick = () => {
+        if(quiz.answers[qi] !== null) return;
+        quiz.answers[qi] = oi;
+        card.querySelectorAll('.opt').forEach(x => {
+          x.disabled = true;
+          const i = Array.prototype.indexOf.call(card.querySelectorAll('.opt'), x);
+          if(i === q.a) x.classList.add('correct');
+          else if(i === oi) x.classList.add('wrong');
+        });
+        card.querySelector('.exp').classList.add('on');
+        const done = quiz.answers.filter(a => a !== null).length;
+        const fill = $('#barFill'); if(fill) fill.style.width = (done / quiz.questions.length * 100) + '%';
+        const pt = $('#progText');  if(pt)  pt.textContent = `${done} / ${quiz.questions.length} answered`;
+        if(done === quiz.questions.length && !quiz.done){
+          quiz.done = true;
+          onAllAnswered(quiz);
+        }
+      };
+      card.appendChild(b);
+    });
+    const ex = document.createElement('div');
+    ex.className = 'exp';
+    ex.textContent = '💡 ' + q.e;
+    card.appendChild(ex);
+    host.appendChild(card);
+  });
+}
+
+function onLessonAnswer(quiz, ls, lang, next){
+  const score = quiz.answers.filter((a, i) => a === quiz.questions[i].a).length;
+  const total = quiz.questions.length;
+  const pct = Math.round(score / total * 100);
+  const passed = score / total >= PASS;
+
+  const verdict = passed
+    ? (pct === 100 ? 'Perfect score. Move on.' : 'Passed. The next lesson is unlocked.')
+    : 'Below the pass mark. Read the lesson again and retake to unlock the next lesson.';
+
+  $('#resultArea').innerHTML = `
+    <div class="q" style="border-color:var(--${passed ? 'ok' : 'bad'})">
+      <div class="scoreline">${score}/${total}
+        <span style="font-size:14px;color:var(--mut)">(${pct}%)</span>
+        <span class="badge ${passed ? 'pass' : 'fail'}">${passed ? 'PASSED' : 'NOT PASSED'}</span>
+      </div>
+      <p class="muted">${verdict}</p>
+      <p class="muted" style="margin:0">Saved to your account: <b>${escapeHtml(ls.title)}</b> · ${lang.name}</p>
+    </div>`;
+
+  $('#retake').classList.remove('hide');
+  if(passed && next) $('#nextLesson').classList.remove('hide');
+
+  saveLessonResult(lang.id, ls.id, score, total, passed).then(() => {
+    renderSaved();  // keep in-memory list fresh if anything else reads it
+  });
+}
+
+/* ================================================================
+   8) CUSTOM TEST BUILDER — the twist
+   ================================================================ */
+function populateSelects(){
+  const gl = $('#genLang'), gt = $('#genLesson');
+  if(!gl || !gt) return;
+  if(!state.langId) state.langId = CURRICULUM[0].id;
+  gl.innerHTML = CURRICULUM.map(l =>
+    `<option value="${l.id}" ${l.id === state.langId ? 'selected' : ''}>${l.name}</option>`).join('');
+  const lessons = allLessons(gl.value);
+  gt.innerHTML = lessons.map(ls =>
+    `<option value="${ls.id}">${escapeHtml(ls.title)}</option>`).join('');
+  updateCustomLock();
+}
+
+function updateCustomLock(){
+  const langId = $('#genLang')?.value;
+  if(!langId) return;
+  const lessons = allLessons(langId);
+  const unlocked = lessons.filter((_, i) => isUnlocked(langId, i));
+  const note = $('#customLockNote');
+  const label = CURRICULUM.find(l => l.id === langId)?.name || langId;
+  if(unlocked.length === lessons.length){
+    note.className = 'msg';
+    note.textContent = '';
+  } else {
+    note.className = 'msg on err';
+    note.textContent = `${unlocked.length} of ${lessons.length} ${label} lessons unlocked. Your own code can only be tested against lessons you have reached — pass the earlier tests to open the rest.`;
+  }
+}
+
+$('#genLang').onchange = () => { state.langId = $('#genLang').value; populateSelects(); };
+$('#genLesson').onchange = updateCustomLock;
+
+/* -- detect concepts in the user's code -- */
+function detectTopics(code, langId){
+  const codeLc = code.toLowerCase();
+  const hits = {};
+  const lessons = allLessons(langId);
+
+  Object.entries(KEYWORDS).forEach(([kw, tag]) => {
+    if(!codeLc.includes(kw.toLowerCase())) return;
+    // map the tag to whichever lesson covers it in this language
+    const match = lessons.find(ls =>
+      ls.id.includes(tag.split('-')[0]) ||
+      ls.title.toLowerCase().includes(tag.split('-')[0]) ||
+      anchorTagFor(ls, langId) === tag
+    );
+    const target = match || lessons.find(ls => quizMentions(ls, code)) ;
+    if(target) hits[target.id] = (hits[target.id] || 0) + 1;
+  });
+
+  const ordered = lessons
+    .filter(ls => hits[ls.id])
+    .sort((a, b) => hits[b.id] - hits[a.id]);
+
+  // Keep only lessons the user has unlocked
+  return ordered.filter(ls => isUnlocked(langId, lessons.findIndex(x => x.id === ls.id))).map(ls => ls.id);
+}
+
+function anchorTagFor(lesson, langId){
+  const map = {
+    'variables-types':'variables-types','functions-closures':'functions-closures',
+    'arrays-objects':'arrays-objects','control-flow':'control-flow',
+    'promises-async':'promises-async','dom-events':'dom-events',
+    'lists-dicts':'lists-dicts','functions-args':'functions-args',
+    'classes-dataclasses':'classes-dataclasses','errors-files':'errors-files',
+    'classes-objects':'classes-objects','types-generics':'types-generics',
+    'inheritance-interfaces':'inheritance-interfaces','exceptions-streams':'exceptions-streams',
+    'select-where':'select-where','joins':'joins','group-by-having':'group-by-having',
+    'indexes-performance':'indexes-performance','html-structure':'html-structure',
+    'selectors-box-model':'selectors-box-model','flexbox-grid':'flexbox-grid',
+    'responsive-css':'responsive-css','types-annotations':'types-annotations',
+    'functions-generics':'functions-generics','avoid-any':'avoid-any',
+    'pointers-references':'pointers-references','classes-raii':'classes-raii',
+    'php-variables':'php-variables','arrays-functions':'arrays-functions',
+    'php-security':'php-security','php-classes-pdo':'php-classes-pdo',
+    'git-basics':'git-basics','git-branches':'git-branches','git-remotes':'git-remotes','git-undo':'git-undo'
+  };
+  return map[lesson.id] || '';
+}
+
+function quizMentions(lesson, code){
+  return lesson.quiz.some(q => code.toLowerCase().includes(q.q.toLowerCase().slice(0, 12)));
+}
+
+$('#codeInput').addEventListener('input', () => {
+  const langId = $('#genLang').value;
+  const found = detectTopics($('#codeInput').value, langId);
+  const names = found.map(id => findLesson(langId, id)?.title).filter(Boolean);
+  $('#detectLine').textContent = names.length
+    ? 'Detected concepts: ' + names.slice(0, 3).join(' · ') + (names.length > 3 ? ` (+${names.length - 3} more)` : '')
+    : 'Detected concepts: — (type real code and the concepts it uses will appear here)';
+  state.quiz = null;
+});
+
+function buildFromLessons(langId, lessonIds, count){
+  const pool = [];
+  lessonIds.forEach(id => {
+    const ls = findLesson(langId, id);
+    if(ls) ls.quiz.forEach(q => pool.push({ ...q, fromLesson:ls.id, lessonTitle:ls.title }));
+  });
+  if(!pool.length) return [];
+  const shuffled = pool.sort(() => Math.random() - 0.5).slice(0, count);
+  return shuffled.map(shuffleQuestion);
+}
+
+function renderEmpty(msg){
+  $('#quizArea').innerHTML = `<div class="card"><h2>No test built yet</h2><p class="sub">${escapeHtml(msg)}</p></div>`;
+}
+
+$('#genFromCode').onclick = () => {
+  const langId = $('#genLang').value;
+  const code = $('#codeInput').value;
+  const found = detectTopics(code, langId);
+
+  if(!found.length){
+    const lessons = allLessons(langId);
+    const firstLocked = lessons.findIndex((ls, i) => !isUnlocked(langId, i));
+    renderEmpty(code.trim()
+      ? 'No concepts recognised in that code yet, or the lesson it belongs to is still locked. Try a full snippet with control flow, functions or data handling — or build a test from a lesson instead.'
+      : (firstLocked > 0
+          ? 'Type some code above to build your own test. Pass the earlier lessons to unlock the rest of this path.'
+          : 'Type or paste some code above and the test will be built from the concepts it uses.'));
+    return;
+  }
+
+  const questions = buildFromLessons(langId, found, 5);
+  if(!questions.length){ renderEmpty('Nothing to build from yet. Try a longer snippet.'); return; }
+
+  state.quiz = {
+    kind:'custom', langId, lessonIds:found, code:code.trim(),
+    questions, answers:new Array(questions.length).fill(null), done:false
+  };
+  renderCustomQuiz();
+  $('#quizArea').scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+$('#genFromLesson').onclick = () => {
+  const langId = $('#genLang').value;
+  const lessonId = $('#genLesson').value;
+  const lesson = findLesson(langId, lessonId);
+  if(!lesson) return;
+
+  const questions = buildFromLessons(langId, [lessonId], lesson.quiz.length);
+  state.quiz = {
+    kind:'custom', langId, lessonIds:[lessonId], code:$('#codeInput').value.trim(),
+    questions, answers:new Array(questions.length).fill(null), done:false
+  };
+  renderCustomQuiz();
+  $('#quizArea').scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+function renderCustomQuiz(){
+  const q = state.quiz;
+  const lang = CURRICULUM.find(l => l.id === q.langId);
+  const titles = q.lessonIds.map(id => findLesson(q.langId, id)?.title).filter(Boolean);
+
+  $('#quizArea').innerHTML = `
+    <div class="card">
+      <h2>Your practice test — ${lang.name}</h2>
+      <p class="sub">Built from: <b>${titles.map(escapeHtml).join(' · ')}</b>${q.code ? ' — from the code you wrote' : ''}</p>
+      <div class="bar"><i id="barFill"></i></div>
+      <p class="muted" id="progText">0 / ${q.questions.length} answered</p>
+      <div id="qList"></div>
+      <div id="resultArea"></div>
+      <div class="row" style="margin-top:14px">
+        <button id="saveCustom" class="btn" disabled>💾 Save this test to my account</button>
+        <button id="clearCustom" class="btn ghost">Clear</button>
+      </div>
+    </div>`;
+
+  renderQuestions($('#qList'), q, onCustomAnswered);
+  $('#clearCustom').onclick = () => { state.quiz = null; renderEmpty('Type code or pick a lesson above to build a new test.'); };
+}
+
+function onCustomAnswered(quiz){
+  const score = quiz.answers.filter((a, i) => a === quiz.questions[i].a).length;
+  const total = quiz.questions.length;
+  const pct = Math.round(score / total * 100);
+
+  $('#resultArea').innerHTML = `
+    <div class="q" style="border-color:var(--acc)">
+      <div class="scoreline">${score}/${total} <span style="font-size:14px;color:var(--mut)">(${pct}%)</span></div>
+      <p class="muted">${pct >= 80 ? 'Strong on these concepts.' : pct >= 50 ? 'Reasonable — review the ones you missed.' : 'Worth revisiting the lessons behind these questions.'}</p>
+      <p class="muted" style="margin:0">Save it below and it stays in your account for later.</p>
+    </div>`;
+
+  const btn = $('#saveCustom');
+  btn.disabled = false;
+  btn.onclick = async () => {
+    const titles = quiz.lessonIds.map(id => findLesson(quiz.langId, id)?.title).filter(Boolean);
+    const entry = {
+      id:'local-' + Date.now(),
+      langId:quiz.langId,
+      lessonId:quiz.lessonIds.join(','),
+      title: titles.join(' + ') || 'Custom test',
+      code: quiz.code,
+      questions: quiz.questions.map(x => ({ q:x.q, o:x.o, a:x.a, e:x.e })),
+      score, total,
+      at:new Date().toISOString()
+    };
+    await pushSaved(entry);
+    renderSaved();
+    btn.disabled = true;
+    btn.textContent = '✓ Saved to your account';
+    switchView('saved');
+  };
+}
+
+/* ================================================================
+   9) SAVED WORK
+   ================================================================ */
+function renderSaved(){
+  const el = $('#savedList');
+  if(!el) return;
+  if(!state.saved.length){
+    el.innerHTML = `<p class="muted">Nothing saved yet. Build a test in <b>Build Your Own Test</b>, finish it,
+      then tap "Save this test to my account". Your lesson scores are saved automatically.</p>`;
+    return;
+  }
+  el.innerHTML = '';
+  state.saved.forEach((s, i) => {
+    const d = new Date(s.at || Date.now());
+    const langName = CURRICULUM.find(l => l.id === s.langId)?.name || s.langId;
+    const card = document.createElement('div');
+    card.className = 'q';
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div class="qt">${escapeHtml(s.title)}</div>
+        <span class="muted">${d.toLocaleDateString()}</span>
+      </div>
+      <p class="muted" style="margin:0 0 6px">${escapeHtml(langName)} · ${s.questions.length} questions${
+        (s.score !== null && s.score !== undefined) ? ` · scored ${s.score}/${s.total}` : ''}</p>
+      ${s.code ? `<pre style="max-height:120px"><code>${escapeHtml(s.code.slice(0, 400))}${s.code.length > 400 ? '\n…' : ''}</code></pre>` : ''}
+      <div class="row">
+        <button class="btn sm" data-act="open" data-i="${i}">Open and retake</button>
+        <button class="btn sm ghost" data-act="del" data-i="${i}">Delete</button>
+      </div>`;
+    el.appendChild(card);
+  });
+  el.querySelectorAll('button').forEach(b => {
+    b.onclick = () => {
+      const i = Number(b.dataset.i);
+      if(b.dataset.act === 'open') reopenSaved(i);
+      else deleteSaved(i);
+    };
+  });
+}
+
+function reopenSaved(i){
+  const s = state.saved[i];
+  state.quiz = {
+    kind:'custom', langId:s.langId, lessonIds:String(s.lessonId).split(','),
+    code:s.code || '',
+    questions:s.questions.map(x => shuffleQuestion(x)),
+    answers:new Array(s.questions.length).fill(null), done:false
+  };
+  switchView('custom');
+  renderCustomQuiz();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+async function deleteSaved(i){
+  const s = state.saved[i];
+  state.saved.splice(i, 1);
+  write(LS.saved, state.saved);
+  renderSaved();
+  if(sb && !String(s.id).startsWith('local-')){
+    try { await sb.from('custom_tests').delete().eq('id', s.id); } catch(e){ console.warn(e.message); }
+  }
+}
+
+/* ================================================================
+   10) VIEWS + BOOT
+   ================================================================ */
+function switchView(v){
+  ['learn','custom','saved'].forEach(x => {
+    const el = $('#view-' + x);
+    if(el) el.classList.toggle('hide', x !== v);
+  });
+  document.querySelectorAll('[data-view]').forEach(b =>
+    b.classList.toggle('on', b.dataset.view === v));
+}
+document.querySelectorAll('[data-view]').forEach(b => {
+  b.onclick = () => { switchView(b.dataset.view); window.scrollTo({ top:0, behavior:'smooth' }); };
+});
+
+(async function boot(){
+  if(sb){
+    const { data } = await sb.auth.getSession();
+    if(data?.session?.user){
+      const u = data.session.user;
+      state.user = {
+        email:u.email,
+        username:u.user_metadata?.username || (u.email || '').split('@')[0],
+        id:u.id
+      };
+      write(LS.session, state.user);
+      await enterApp();
+      return;
+    }
+    sb.auth.onAuthStateChange((event) => {
+      if(event === 'SIGNED_OUT' && state.user) $('#logoutBtn').click();
+    });
+  } else {
+    const cached = read(LS.session, null);
+    if(cached){ state.user = cached; await enterApp(); return; }
+  }
+  populateSelects();
+})();
+</script>
+</body>
+</html>
